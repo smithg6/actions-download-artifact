@@ -6,6 +6,7 @@ const moment = require('moment')
 const pathname = require('path')
 const fs = require("fs")
 const lodash = require('lodash')
+const extract_input = require('extract')
 
 function getLatest(artifacts) {
   var latestArtifact = artifacts.reduce((prev, cur, index) => {
@@ -29,10 +30,12 @@ async function main() {
     const artifactName = core.getInput("name", { required: false });
     const latest_input = (core.getInput("latest", { required: false }));
     const latest = latest_input ? latest_input.toLowerCase() === 'true' : false;
+    const extract_input = (core.getInput("extract", { required: false }));
+    const extract = extract_input ? extract_input.toLowerCase() === 'true' : true; // Default to true
 
     const client = github.getOctokit(token);
 
-    console.log('input', path, artifactName, latest);
+    console.log('input', path, artifactName, latest, extract);
 
     console.log("==> Repo:", owner + "/" + repo);
 
@@ -92,16 +95,23 @@ async function main() {
 
         fs.mkdirSync(dir, { recursive: true });
 
-        const adm = new AdmZip(Buffer.from(zip.data));
+        const zipPath = pathname.join(dir, `${artifact.name}.zip`);
+        fs.writeFileSync(zipPath, Buffer.from(zip.data));
 
-        adm.getEntries().forEach((entry) => {
-          const action = entry.isDirectory ? "creating" : "inflating";
-          const filepath = pathname.join(dir, entry.entryName);
+        if (extract) {
+          const adm = new AdmZip(zipPath);
 
-          console.log(`  ${action}: ${filepath}`)
-        });
+          adm.getEntries().forEach((entry) => {
+            const action = entry.isDirectory ? "creating" : "inflating";
+            const filepath = pathname.join(dir, entry.entryName);
 
-        adm.extractAllTo(dir, true);
+            console.log(`  ${action}: ${filepath}`)
+          });
+
+          adm.extractAllTo(dir, true);
+        } else {
+          console.log(`  Saved zip file to: ${zipPath}`);
+        }
       }
     }
   } catch (error) {
