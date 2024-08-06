@@ -6,7 +6,6 @@ const moment = require('moment')
 const pathname = require('path')
 const fs = require("fs")
 const lodash = require('lodash')
-const extract_input = require('extract')
 
 function getLatest(artifacts) {
   var latestArtifact = artifacts.reduce((prev, cur, index) => {
