@@ -23,6 +23,9 @@ An action that downloads and extracts uploaded artifact by name. Download artifa
     # Optional, directory where to extract artifact
     path: extract_here
 
+    # Optional, allows downloaded artifact to remain as zip file
+    extract: true
+
     # Optional, defaults to current repo
     repo: ${{github.repository}}
 ```
